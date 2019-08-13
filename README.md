@@ -1,5 +1,7 @@
 # Bayesian ADAPTive Experimental Design
 
+[![PyPI](https://img.shields.io/pypi/v/badapted.svg?color=green)](https://pypi.org/project/badapted/)
+
 Run efficient Bayesian adaptive experiments.
 
 This code relates to the following pre-print. But, the pre-print is likely to appear in quite a different form when finally published.

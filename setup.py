@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="badapted",
-    version="0.0.1",
+    version="0.0.2",
     author="Benjamin T. Vincent",
     author_email="b.t.vincent@dundee.ac.uk",
     description="Bayesian ADAPTive Experimental Design",
