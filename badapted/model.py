@@ -15,7 +15,7 @@ particles.
 
 
 from abc import ABC, abstractmethod
-from bad.inference import update_beliefs
+from badapted.inference import update_beliefs
 from scipy.stats import norm, bernoulli
 import logging
 import time
