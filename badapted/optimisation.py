@@ -1,5 +1,5 @@
 import numpy as np
-from bad.utils import normalise, sample_rows, shuffle_rows
+from badapted.utils import normalise, sample_rows, shuffle_rows
 import logging
 
 

@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from scipy.stats import norm, t
-from bad.utils import normalise, sample_rows
+from badapted.utils import normalise, sample_rows
 import logging
 
 
@@ -59,7 +59,7 @@ def update_beliefs(p_log_pdf, θstart, data=None, n_steps=5, step_type='normal',
             scale_walk_factor = 2
 
     # scale walk should be a vector, length equal to number of parameter dimensions
-    # NOTE: This will crash if we only have parameter, so we need to manually define a 
+    # NOTE: This will crash if we only have parameter, so we need to manually define a
     # scale_walk_factor in this case
     if θstart.shape[1]:
         scale_walk = scale_walk_factor
@@ -97,7 +97,7 @@ def pmc(data, p_log_pdf, q_log_pdf, q_sample, θstart, n_steps, display=False):
     proposal adaptation. See "Population Monte Carlo" (Cappe et al 2012).
     In short PMC without adaptation equates to SMC on a stationary target
     distribtuion.
-    
+
     Inputs
     p_log_pdf  :  Anonymous function giving the log pdf of the target
                   distribution p.  Need not be normalized.  Should take a
@@ -140,7 +140,7 @@ def pmc(data, p_log_pdf, q_log_pdf, q_sample, θstart, n_steps, display=False):
         assert not np.isnan(log_p).any(), 'Your p_log_pdf is generating NaNs!'
         # NOTE: You may be getting -inf values, for example if q_sample is generating
         # samples out of the domain of some of the parameters. But this is fine here,
-        # and simply results in -inf log posterior prob 
+        # and simply results in -inf log posterior prob
 
         log_q = q_log_pdf(θold, θ)
         assert not np.isnan(log_q).any(), 'Your q_log_pdf is generating NaNs!'
@@ -151,12 +151,12 @@ def pmc(data, p_log_pdf, q_log_pdf, q_sample, θstart, n_steps, display=False):
 
         log_Z_steps[n] = z_max + np.log(sum_w) - np.log(w.size)
 
-        # TODO: fix this logging/printing 
+        # TODO: fix this logging/printing
         # logging.info(f'mean {np.mean(θ)}, std_dev {np.std(θ)}')
         # if display:
         #     # TODO: I've not confirmed that this works
         #     print(f'mean {np.mean(θ)}, std_dev {np.std(θ)}')
-            
+
     log_Z_steps_max = np.max(log_Z_steps)
     Zs = np.exp(log_Z_steps - log_Z_steps_max)
     log_Z = log_Z_steps_max + np.log(np.sum(Zs)) - np.log(log_Z_steps_max.size)
