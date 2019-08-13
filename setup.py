@@ -4,11 +4,11 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="bad-drbenvincent",
+    name="badapted",
     version="0.0.1",
     author="Benjamin T. Vincent",
     author_email="b.t.vincent@dundee.ac.uk",
-    description="Bayesian adaptive design",
+    description="Bayesian ADAPTive Experimental Design",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/drbenvincent/bad/",

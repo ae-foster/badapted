@@ -1,4 +1,4 @@
-# Bayesian Adaptive Design
+# Bayesian ADAPTive Experimental Design
 
 Run efficient Bayesian adaptive experiments.
 
