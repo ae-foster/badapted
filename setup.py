@@ -12,8 +12,8 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/drbenvincent/badapted",
-    keywords = ["bayesian", "adaptive design", "inference", "optimisation"]
-    packages=setuptools.find_packages(),
+    keywords = ["bayesian", "adaptive design", "inference", "optimisation"],
+    packages=['badapted'],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
