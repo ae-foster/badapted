@@ -11,7 +11,8 @@ setuptools.setup(
     description="Bayesian ADAPTive Experimental Design",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/drbenvincent/bad/",
+    url="https://github.com/drbenvincent/badapted",
+    keywords = ["bayesian", "adaptive design", "inference", "optimisation"]
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
