@@ -10,43 +10,16 @@ This code relates to the following pre-print. But, the pre-print is likely to ap
 > Vincent, B. T., & Rainforth, T. (2017, October 20). The DARC Toolbox: automated, flexible, and efficient delayed and risky choice experiments using Bayesian adaptive design. Retrieved from psyarxiv.com/yehjb
 
 
-## Guide to using `badapted` for developers
+## Building your own adaptive experiment toolbox on top of `badapted`
 
-Below we outline how the `badapted` package can be used to run adaptive experiments. On it's own, this `badapted` package will not do anything. It also requires a few classes that a developer must create for their particular experimental paradigm. This forms a 'toolbox' which will allow adaptive experiments to be run in a particular experimental domain. The best (first) example of this is our [DARC Toolbox](https://github.com/drbenvincent/darc_toolbox) which allows adaptive experiments for Delayed And Risky Choice tasks.
+Below we outline how the `badapted` package can be used to run adaptive experiments. On it's own, this `badapted` package will not do anything. It also requires a few classes (and probably some helper functions) that a developer must create for their particular experimental paradigm. This forms a 'toolbox' which will allow adaptive experiments to be run in a particular experimental domain.
 
-### Experiment trial loop
+The best (first) example of this is our [DARC Toolbox](https://github.com/drbenvincent/darc_toolbox) which allows adaptive experiments for Delayed And Risky Choice tasks.
 
-First we look at the big picture organisation of an experiment trial loop. This is reasonably straight-forward.
+But below we outline how to go about creating a new 'toolbox' for your experimental domain of interest.
 
-```python
-def run_experiment(design_thing, model, max_trials):
-    '''Run an adaptive experiment
-    INPUTS:
-    - design_thing: a class
-    '''
 
-    for trial in range(max_trials):
-        design = design_thing.get_next_design(model)
-        if design is None:
-            break
-        response = get_response(design)
-        design_thing.enter_trial_design_and_response(design, response)
-        model.update_beliefs(design_thing.get_df())
-
-    return model
-```
-
-In order to run this we need some setup code first
-
-```python
-# setup code
-designs = build_my_design_space(my_arguments)
-design_thing = MyCustomDesignGenerator(designs, max_trials=max_trials)
-model = MyCustomModel()
-
-# now we have everything we need to run the experiment...
-model = run_experiment(design_thing, model, max_trials)
-```
+### Step 1: define your design space
 
 First we create a pandas dataframe called `designs` using a function we write to do this. Each column is a design variable. Each row is a particular design.
 
@@ -56,12 +29,58 @@ def build_my_design_space(my_arguments):
     return designs
 ```
 
-Second we provide that list of all the designs when we create a new `design_thing` object. We provide it all of the `designs` and we call it's `get_next_design()` method.
+### Step 2: define a custom design generator
 
-Third, we create a new model object, see below.
+Building your own _Bayesian adaptive_ design generator is not necessarily going to be quick. We recommend that you look at the example in the darc toolbox (https://github.com/drbenvincent/darc_toolbox) to get an idea what is going on.
 
+However, it is much easier to create your own custom _heuristic_ adaptive design generator is much easier. Again, we suggest looking at examples from the darc toolbox (https://github.com/drbenvincent/darc_toolbox).
 
-### Provide a model
+Nevertheless, the information below is an attempt to outline the core requirements of this class... You must provide a class which deals with designs that inherits from `DesignGeneratorABC`.  You must provide a single method `get_next_design()`.
+
+Here is an example of a minimal user-defined design generator.
+
+```python
+from badapted.designs import DesignGeneratorABC
+import pandas as pd
+import numpy as np
+
+class MyCustomDesignGenerator(DesignGeneratorABC):
+    '''
+    A custom design generator.
+    It must subclass `DesignGeneratorABC` from badapted.designs.py
+    You must impliment the method `get_next_design`
+    '''
+
+    def __init__(self, max_trial=20):
+        '''Do whatever setup you need to do here, such as creating class variables etc'''
+        self.trial = 0
+        self.max_trials = max_trial
+        # call the superclass constructor
+        super().__init__()
+
+    def get_next_design(self, model):
+        """Get the next design.
+
+        INPUT:
+        - `model` is an optional input.
+
+        OUTPUT:
+        - return the next design. This can be in whatever form you want, but it might be useful to define a namped tuple which is intuitive for your problem domain and return that.
+        """
+
+        if self.trial >= self.max_trials:
+            return None
+
+        # You can use this method from the base class if it is useful
+        last_response_chose_B = self.get_last_response_chose_B()
+
+        # *** YOUR CODE TO PROVIDE A DESIGN HERE ***
+
+        return design
+```
+
+### Step 3: define a model
+
 You must provide a model class which inherits from `Model`. You must also provide the following methods:
 
 - `__init__`
@@ -115,55 +134,41 @@ class MyCustomModel(Model):
         return p_chose_B
 ```
 
-### Provide a design generator
+### Step 4: build an experiment trial loop
 
-Building your own _Bayesian adaptive_ design generator is not necessarily going to be easy. We recommend that you look at the example in the darc toolbox (https://github.com/drbenvincent/darc_toolbox) to get an idea what is going on.
-
-However, it is much easier to create your own custom _heuristic_ adaptive design generator is much easier. Again, we suggest looking at examples from the darc toolbox (https://github.com/drbenvincent/darc_toolbox).
-
-Nevertheless, the information below is an attempt to outline the core requirements of this class... You must provide a class which deals with designs that inherits from `DesignGeneratorABC`.  You must provide a single method `get_next_design()`.
-
-Here is an exmaple of a minimal user-defined design generator.
+This is pretty straight-forward and there doesn't need to be any major customisation here.
 
 ```python
-from badapted.designs import DesignGeneratorABC
-import pandas as pd
-import numpy as np
-
-class MyCustomDesignGenerator(DesignGeneratorABC):
-    '''
-    A custom design generator.
-    It must subclass `DesignGeneratorABC` from badapted.designs.py
-    You must impliment the method `get_next_design`
+def run_experiment(design_thing, model, max_trials):
+    '''Run an adaptive experiment
+    INPUTS:
+    - design_thing: a class
     '''
 
-    def __init__(self, max_trial=20):
-        '''Do whatever setup you need to do here, such as creating class variables etc'''
-        self.trial = 0
-        self.max_trials = max_trial
-        # call the superclass constructor
-        super().__init__()
+    for trial in range(max_trials):
+        design = design_thing.get_next_design(model)
+        if design is None:
+            break
+        response = get_response(design)
+        design_thing.enter_trial_design_and_response(design, response)
+        model.update_beliefs(design_thing.get_df())
 
-    def get_next_design(self, model):
-        """Get the next design.
-
-        INPUT:
-        - `model` is an optional input.
-
-        OUTPUT:
-        - return the next design. This can be in whatever form you want, but it might be useful to define a namped tuple which is intuitive for your problem domain and return that.
-        """
-
-        if self.trial >= self.max_trials:
-            return None
-
-        # You can use this method from the base class if it is useful
-        last_response_chose_B = self.get_last_response_chose_B()
-
-        # *** YOUR CODE TO PROVIDE A DESIGN HERE ***
-
-        return design
+    return model
 ```
+
+Note that the `response = get_response(design)` line is up to you to impliment. What you do here depends on whether you are simulating responses or getting real responses from PsychoPy etc. The `run_experiment` function is just an example of how the various parts of the code work together. When running _actual_ experiments using PsychoPy, it is best to refer to the demo psychopy files we provide in the [DARC Toolbox](https://github.com/drbenvincent/darc_toolbox) as examples to see how this is done.
+
+### Step 5: setup and run the experiment
+
+```python
+designs = build_my_design_space(my_arguments)
+design_thing = MyCustomDesignGenerator(designs, max_trials=max_trials)
+model = MyCustomModel()
+
+model = run_experiment(design_thing, model, max_trials)
+```
+
+
 
 ## Toolboxes using `badapted`
 - [DARC Toolbox](https://github.com/drbenvincent/darc_toolbox) for adpative Delayed and Risky Choice tasks.
