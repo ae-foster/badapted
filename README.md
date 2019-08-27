@@ -33,7 +33,7 @@ def build_my_design_space(my_arguments):
 
 Building your own _Bayesian adaptive_ design generator is not necessarily going to be quick. We recommend that you look at the example in the darc toolbox (https://github.com/drbenvincent/darc_toolbox) to get an idea what is going on.
 
-However, it is much easier to create your own custom _heuristic_ adaptive design generator is much easier. Again, we suggest looking at examples from the darc toolbox (https://github.com/drbenvincent/darc_toolbox).
+However, it is much easier to create your own custom _heuristic_ adaptive design generator. Again, we suggest looking at examples from the darc toolbox (https://github.com/drbenvincent/darc_toolbox).
 
 Nevertheless, the information below is an attempt to outline the core requirements of this class... You must provide a class which deals with designs that inherits from `DesignGeneratorABC`.  You must provide a single method `get_next_design()`.
 
