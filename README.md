@@ -168,6 +168,7 @@ model = MyCustomModel()
 model = run_experiment(design_thing, model, max_trials)
 ```
 
+Note that use of the `run_experiment` function is just a demonstration of the logic of how things fit together. As mentioned, please refer to PsychoPy example experiments in the [DARC Toolbox](https://github.com/drbenvincent/darc_toolbox) to see how this all comes together in a PsychoPy experiment.
 
 
 ## Toolboxes using `badapted`
