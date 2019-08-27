@@ -52,13 +52,14 @@ First we create a pandas dataframe called `designs` using a function we write to
 
 ```python
 def build_my_design_space(my_arguments):
-    # CREATE PANDAS DATAFRAME OF THE DESIGN SPACE HERE
-    designs = ...
+    designs = # CREATE PANDAS DATAFRAME OF THE DESIGN SPACE HERE
     return designs
 ```
 
+Second we provide that list of all the designs when we create a new `design_thing` object. We provide it all of the `designs` and we call it's `get_next_design()` method.
 
-- `design_thing` is an object (see below). We provide it all of the `designs` and we call it's `get_next_design()` method.
+Third, we create a new model object, see below.
+
 
 ### Provide a model
 You must provide a model class which inherits from `Model`. You must also provide the following methods:
