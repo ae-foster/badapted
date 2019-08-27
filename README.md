@@ -10,30 +10,27 @@ This code relates to the following pre-print. But, the pre-print is likely to ap
 > Vincent, B. T., & Rainforth, T. (2017, October 20). The DARC Toolbox: automated, flexible, and efficient delayed and risky choice experiments using Bayesian adaptive design. Retrieved from psyarxiv.com/yehjb
 
 
-## Guide to using `badapted`
+## Guide to using `badapted` for developers
 
-Below we outline how the `badapted` package can be used to run adaptive experiments. On it's own, this `badapted` package will not do anything. It also requires a few classse that a developer must create for their particular experimental paradigm.
+Below we outline how the `badapted` package can be used to run adaptive experiments. On it's own, this `badapted` package will not do anything. It also requires a few classes that a developer must create for their particular experimental paradigm. This forms a 'toolbox' which will allow adaptive experiments to be run in a particular experimental domain. The best (first) example of this is our [DARC Toolbox](https://github.com/drbenvincent/darc_toolbox) which allows adaptive experiments for Delayed And Risky Choice tasks.
 
 ### Experiment trial loop
 
+First we look at the big picture organisation of an experiment trial loop. This is reasonably straight-forward.
+
 ```python
-def run_an_experiment(design_thing, model, max_trials):
+def run_experiment(design_thing, model, max_trials):
     '''Run an adaptive experiment
     INPUTS:
     - design_thing: a class
     '''
 
     for trial in range(max_trials):
-
         design = design_thing.get_next_design(model)
-
         if design is None:
             break
-
         response = get_response(design)
-
         design_thing.enter_trial_design_and_response(design, response)
-
         model.update_beliefs(design_thing.get_df())
 
     return model
@@ -42,10 +39,26 @@ def run_an_experiment(design_thing, model, max_trials):
 In order to run this we need some setup code first
 
 ```python
-# SETUP CODE HERE !!!!!!!!!!!!!!!!!!!!!!!
+# setup code
+designs = build_my_design_space(my_arguments)
+design_thing = MyCustomDesignGenerator(designs, max_trials=max_trials)
+model = MyCustomModel()
 
-model = run_an_experiment(design_thing, model, max_trials)
+# now we have everything we need to run the experiment...
+model = run_experiment(design_thing, model, max_trials)
 ```
+
+First we create a pandas dataframe called `designs` using a function we write to do this. Each column is a design variable. Each row is a particular design.
+
+```python
+def build_my_design_space(my_arguments):
+    # CREATE PANDAS DATAFRAME OF THE DESIGN SPACE HERE
+    designs = ...
+    return designs
+```
+
+
+- `design_thing` is an object (see below). We provide it all of the `designs` and we call it's `get_next_design()` method.
 
 ### Provide a model
 You must provide a model class which inherits from `Model`. You must also provide the following methods:
@@ -150,3 +163,6 @@ class MyCustomDesignGenerator(DesignGeneratorABC):
 
         return design
 ```
+
+## Toolboxes using `badapted`
+- [DARC Toolbox](https://github.com/drbenvincent/darc_toolbox) for adpative Delayed and Risky Choice tasks.
