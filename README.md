@@ -53,10 +53,40 @@ class MyCustomDesignGenerator(DesignGeneratorABC):
 
     def __init__(self, max_trial=20):
         '''Do whatever setup you need to do here, such as creating class variables etc'''
-        self.trial = 0
-        self.max_trials = max_trial
-        # call the superclass constructor
         super().__init__()
+        self.max_trials = max_trial
+
+        # generate empty dataframe. Columns are design variables, specific to the experimental domain.
+        data_columns = ['RA', 'DA', 'PA', 'RB', 'DB', 'PB', 'R']
+        self.data = pd.DataFrame(columns=data_columns)
+
+    def add_design_response_to_dataframe(self, design, response):
+        '''
+        This method must take in `design` and `reward` from the current trial
+        and store this as a new row in self.data which is a pandas data frame.
+        '''
+
+        # TODO: need to specify types here I think... then life might be
+        # easier to decant the data out at another point
+        # trial_df = design_to_df(design)
+        # self.data = self.data.append(trial_df)
+
+        trial_data = {'RA': design.ProspectA.reward,
+                    'DA': design.ProspectA.delay,
+                    'PA': design.ProspectA.prob,
+                    'RB': design.ProspectB.reward,
+                    'DB': design.ProspectB.delay,
+                    'PB': design.ProspectB.prob,
+                    'R': [int(response)]}
+        self.data = self.data.append(pd.DataFrame(trial_data))
+        # a bit clumsy but...
+        self.data['R'] = self.data['R'].astype('int64')
+        self.data = self.data.reset_index(drop=True)
+
+
+        # we potentially manually call model to update beliefs here. But so far
+        # this is done manually in PsychoPy
+        return
 
     def get_next_design(self, model):
         """Get the next design.

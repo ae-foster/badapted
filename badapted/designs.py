@@ -35,16 +35,19 @@ class DesignGeneratorABC(ABC):
         pass
 
 
-    @abstractmethod
     def enter_trial_design_and_response(self, design, response):
+        '''Call this function with the last design and it's corresponding response'''
+        self.add_design_response_to_dataframe(design, response)
+        self.trial += 1
+
+
+    @abstractmethod
+    def add_design_response_to_dataframe(self, design, response):
         '''
         This method must take in `design` and `reward` from the current trial
         and store this as a new row in self.data which is a pandas data frame.
-        It must also increment the trial counter with:
-            self.trial += 1
         '''
         pass
-
 
     def get_last_response_chose_B(self):
         '''return True if the last response was for the option B'''
