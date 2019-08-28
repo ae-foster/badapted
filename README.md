@@ -139,19 +139,19 @@ class MyCustomModel(Model):
 This is pretty straight-forward and there doesn't need to be any major customisation here.
 
 ```python
-def run_experiment(design_thing, model, max_trials):
+def run_experiment(design_generator, model, max_trials):
     '''Run an adaptive experiment
     INPUTS:
-    - design_thing: a class
+    - design_generator: a class
     '''
 
     for trial in range(max_trials):
-        design = design_thing.get_next_design(model)
+        design = design_generator.get_next_design(model)
         if design is None:
             break
         response = get_response(design)
-        design_thing.enter_trial_design_and_response(design, response)
-        model.update_beliefs(design_thing.get_df())
+        design_generator.enter_trial_design_and_response(design, response)
+        model.update_beliefs(design_generator.get_df())
 
     return model
 ```
@@ -162,10 +162,10 @@ Note that the `response = get_response(design)` line is up to you to impliment. 
 
 ```python
 designs = build_my_design_space(my_arguments)
-design_thing = MyCustomDesignGenerator(designs, max_trials=max_trials)
+design_generator = MyCustomDesignGenerator(designs, max_trials=max_trials)
 model = MyCustomModel()
 
-model = run_experiment(design_thing, model, max_trials)
+model = run_experiment(design_generator, model, max_trials)
 ```
 
 Note that use of the `run_experiment` function is just a demonstration of the logic of how things fit together. As mentioned, please refer to PsychoPy example experiments in the [DARC Toolbox](https://github.com/drbenvincent/darc_toolbox) to see how this all comes together in a PsychoPy experiment.
