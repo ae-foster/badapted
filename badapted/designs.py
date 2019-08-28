@@ -61,7 +61,7 @@ class DesignGeneratorABC(ABC):
             return False
 
 
-    # TODO: remove this getter and just access the property directly
-    def get_df(self):
-        '''return dataframe of data'''
-        return self.data
+    # # TODO: remove this getter and just access the property directly
+    # def get_df(self):
+    #     '''return dataframe of data'''
+    #     return self.data

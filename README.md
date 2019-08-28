@@ -181,7 +181,7 @@ def run_experiment(design_generator, model, max_trials):
             break
         response = get_response(design)
         design_generator.enter_trial_design_and_response(design, response)
-        model.update_beliefs(design_generator.get_df())
+        model.update_beliefs(design_generator.data)
 
     return model
 ```
