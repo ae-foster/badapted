@@ -31,32 +31,50 @@ def build_my_design_space(my_arguments):
 
 ### Step 2: define a custom design generator
 
-Building your own _Bayesian adaptive_ design generator is not necessarily going to be quick. We recommend that you look at the example in the darc toolbox (https://github.com/drbenvincent/darc_toolbox) to get an idea what is going on.
+In order to generate your own design generator that uses Bayesian Adaptive Design (in your experimental domain) then you need to create a class which subclasses `badapted.BayesianAdaptiveDesignGenerator`. You will also need to implement some methods specific to your experimental domain, notably:
+- `add_design_response_to_dataframe`
+- `df_to_design_tuple`
 
-However, it is much easier to create your own custom _heuristic_ adaptive design generator. Again, we suggest looking at examples from the darc toolbox (https://github.com/drbenvincent/darc_toolbox).
+For the moment, we will just provide the example we use in the DARC Toolbox. Firstly, our concrete design generator class is defined as:
 
-Nevertheless, the information below is an attempt to outline the core requirements of this class... You must provide a class which deals with designs that inherits from `DesignGeneratorABC`.  You must provide a single method `get_next_design()`.
+```python
+from badapted.designs import BayesianAdaptiveDesignGenerator
 
-Here is an example of a minimal user-defined design generator.
+class BayesianAdaptiveDesignGeneratorDARC(DARCDesignGenerator, BayesianAdaptiveDesignGenerator):
+    '''This will be the concrete class for doing Bayesian adaptive design
+    in the DARC experiment domain.'''
+
+    def __init__(self, design_space,
+                 max_trials=20,
+                 allow_repeats=True,
+                 penalty_function_option='default',
+                 λ=2):
+
+        # call superclass constructors - note that the order of calling these is important
+        BayesianAdaptiveDesignGenerator.__init__(self, design_space,
+                 max_trials=max_trials,
+                 allow_repeats=allow_repeats,
+                 penalty_function_option=penalty_function_option,
+                 λ=λ)
+
+        DARCDesignGenerator.__init__(self)
+```
+
+Note that this has mulitple inheritance, so we also have a class `DARCDesignGenerator` which just includes DARC specific methods (`add_design_response_to_dataframe`, `df_to_design_tuple`). This is defined as:
 
 ```python
 from badapted.designs import DesignGeneratorABC
-import pandas as pd
-import numpy as np
+from darc_toolbox import Prospect, Design
 
-class MyCustomDesignGenerator(DesignGeneratorABC):
-    '''
-    A custom design generator.
-    It must subclass `DesignGeneratorABC` from badapted.designs.py
-    You must impliment the method `get_next_design`
-    '''
 
-    def __init__(self, max_trial=20):
-        '''Do whatever setup you need to do here, such as creating class variables etc'''
-        super().__init__()
-        self.max_trials = max_trial
+class DARCDesignGenerator(DesignGeneratorABC):
+    '''This adds DARC specific functionality to the design generator'''
 
-        # generate empty dataframe. Columns are design variables, specific to the experimental domain.
+    def __init__(self):
+        # super().__init__()
+        DesignGeneratorABC.__init__(self)
+
+        # generate empty dataframe
         data_columns = ['RA', 'DA', 'PA', 'RB', 'DB', 'PB', 'R']
         self.data = pd.DataFrame(columns=data_columns)
 
@@ -65,11 +83,6 @@ class MyCustomDesignGenerator(DesignGeneratorABC):
         This method must take in `design` and `reward` from the current trial
         and store this as a new row in self.data which is a pandas data frame.
         '''
-
-        # TODO: need to specify types here I think... then life might be
-        # easier to decant the data out at another point
-        # trial_df = design_to_df(design)
-        # self.data = self.data.append(trial_df)
 
         trial_data = {'RA': design.ProspectA.reward,
                     'DA': design.ProspectA.delay,
@@ -82,32 +95,27 @@ class MyCustomDesignGenerator(DesignGeneratorABC):
         # a bit clumsy but...
         self.data['R'] = self.data['R'].astype('int64')
         self.data = self.data.reset_index(drop=True)
-
-
-        # we potentially manually call model to update beliefs here. But so far
-        # this is done manually in PsychoPy
         return
 
-    def get_next_design(self, model):
-        """Get the next design.
-
-        INPUT:
-        - `model` is an optional input.
-
-        OUTPUT:
-        - return the next design. This can be in whatever form you want, but it might be useful to define a namped tuple which is intuitive for your problem domain and return that.
-        """
-
-        if self.trial >= self.max_trials:
-            return None
-
-        # You can use this method from the base class if it is useful
-        last_response_chose_B = self.get_last_response_chose_B()
-
-        # *** YOUR CODE TO PROVIDE A DESIGN HERE ***
-
-        return design
+    @staticmethod
+    def df_to_design_tuple(df):
+        '''User must impliment this method. It takes in a design in the form of a
+        single row of pandas dataframe, and it must return the chosen design as a
+        named tuple.
+        Convert 1-row pandas dataframe into named tuple'''
+        RA = df.RA.values[0]
+        DA = df.DA.values[0]
+        PA = df.PA.values[0]
+        RB = df.RB.values[0]
+        DB = df.DB.values[0]
+        PB = df.PB.values[0]
+        chosen_design = Design(ProspectA=Prospect(reward=RA, delay=DA, prob=PA),
+                            ProspectB=Prospect(reward=RB, delay=DB, prob=PB))
+        return chosen_design
 ```
+
+We only did this multiple inheritance because we wanted other (non Bayesian Adaptive) design generators which worked in the DARC domain, but did not have any of the Bayesian Adaptive Design components. In most situations just focussing on Bayesian Adaptive Design, you could just define the `add_design_response_to_dataframe`, `df_to_design_tuple` classes in your one single concrete design generator class.
+
 
 ### Step 3: define a model
 
@@ -134,9 +142,13 @@ class MyCustomModel(Model):
         '''
         INPUTS
         - n_particles (integer).
-        - prior (dictionary). The keys provide the parameter name. The values must be scipy.stats objects which define the prior distribution for this parameter.
+        - prior (dictionary). The keys provide the parameter name. The values
+        must be scipy.stats objects which define the prior distribution for
+        this parameter.
 
-        We provide choice functions in `badapted.choice_functions.py`. In this example, we define it in the __init__ but it is not necessary to happen here.
+        We provide choice functions in `badapted.choice_functions.py`. In this
+        example, we define it in the __init__ but it is not necessary to happen
+        here.
         '''
         self.n_particles = int(n_particles)
         self.prior = prior
