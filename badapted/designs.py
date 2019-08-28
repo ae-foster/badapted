@@ -23,10 +23,7 @@ class DesignGeneratorABC(ABC):
 
     def __init__(self):
         self.trial = int(0)
-
-        # # generate empty dataframe
-        # data_columns = ['RA', 'DA', 'PA', 'RB', 'DB', 'PB', 'R']
-        # self.data = pd.DataFrame(columns=data_columns)
+        self.data = None
 
 
     @abstractmethod
@@ -38,32 +35,15 @@ class DesignGeneratorABC(ABC):
         pass
 
 
+    @abstractmethod
     def enter_trial_design_and_response(self, design, response):
-        '''middle-man method'''
-
-        # TODO: need to specify types here I think... then life might be
-        # easier to decant the data out at another point
-        # trial_df = design_to_df(design)
-        # self.data = self.data.append(trial_df)
-
-        trial_data = {'RA': design.ProspectA.reward,
-                    'DA': design.ProspectA.delay,
-                    'PA': design.ProspectA.prob,
-                    'RB': design.ProspectB.reward,
-                    'DB': design.ProspectB.delay,
-                    'PB': design.ProspectB.prob,
-                    'R': [int(response)]}
-        self.data = self.data.append(pd.DataFrame(trial_data))
-        # a bit clumsy but...
-        self.data['R'] = self.data['R'].astype('int64')
-        self.data = self.data.reset_index(drop=True)
-
-
-        self.trial += 1
-
-        # we potentially manually call model to update beliefs here. But so far
-        # this is done manually in PsychoPy
-        return
+        '''
+        This method must take in `design` and `reward` from the current trial
+        and store this as a new row in self.data which is a pandas data frame.
+        It must also increment the trial counter with:
+            self.trial += 1
+        '''
+        pass
 
 
     def get_last_response_chose_B(self):
