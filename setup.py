@@ -20,4 +20,5 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=['numpy', 'scipy', 'pandas', 'matplotlib',],
+    data_files = [("", ["LICENSE"])]
 )
