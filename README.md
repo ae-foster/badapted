@@ -2,7 +2,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/badapted.svg?color=green)](https://pypi.org/project/badapted/)
 
-**Status:  🔥 Under active development 🔥**
+**Status: Working code, but still under development 🔥**
 
 Run efficient Bayesian adaptive experiments.
 
@@ -215,3 +215,4 @@ Note that use of the `run_experiment` function is just a demonstration of the lo
 
 ## Toolboxes using `badapted`
 - [DARC Toolbox](https://github.com/drbenvincent/darc_toolbox) for adpative Delayed and Risky Choice tasks.
+- [Adaptive Psychophysics Toolbox](https://github.com/drbenvincent/adaptive_psychophysics_toolbox) for psychophysical experiments. _[Note: still under active development.]_
