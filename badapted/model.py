@@ -1,4 +1,4 @@
-'''
+"""
 Model base class used by _any_ domain specific use of our Bayesian Adaptive
 Design package
 
@@ -11,7 +11,7 @@ code. We are only ever representing particles for the free parameters.
 Fixed parameters are just build in to the model class as scalars and are used
 by model functions when needed... they are never converted into a series of
 particles.
-'''
+"""
 
 
 from abc import ABC, abstractmethod
@@ -26,8 +26,8 @@ from random import random
 from badapted.triplot import tri_plot
 
 
-class Model():
-    '''
+class Model:
+    """
     Model abstract base class. It does nothing on it's own, but it sketches out
     the core elements of _any_ model which we could use. To be clear, a model
     could be pretty much any computational/mathematical model which relates
@@ -44,19 +44,21 @@ class Model():
     I also impose that all of the models will involve a single decision
     variable. A choice function then operates on this decision variable in
     order to produce a probability of responding one way of the other.
-    '''
+    """
 
     _prior = dict()
     θ_fixed = dict()
     θ_true = None
     n_particles = None
+    summary_stats = None
 
     def update_beliefs(self, data):
-        '''simply call the low-level `update_beliefs` function'''
+        """simply call the low-level `update_beliefs` function"""
         start_time = time.time()
         self.θ, _ = update_beliefs(self.p_log_pdf, self.θ, data, display=False)
-        logging.info(
-            f'update_beliefs() took: {time.time()-start_time:1.3f} seconds')
+        logging.info(f"update_beliefs() took: {time.time()-start_time:1.3f} seconds")
+
+        self = self.update_θ_summary_stats()
         return self
 
     def p_log_pdf(self, θ, data):
@@ -94,7 +96,6 @@ class Model():
         ll = np.sum(ll, axis=1)  # sum over trials
         return ll
 
-
     def log_prior_pdf(self, θ):
         """Evaluate the log prior density, log(p(θ)), for the values θ
         θ: dictionary, each key is a parameter name
@@ -114,21 +115,24 @@ class Model():
 
     @prior.setter
     def prior(self, dict_of_priors):
-        '''Ensure that we call _sample_from_prior() whenever we set _prior '''
+        """Ensure that we call _sample_from_prior() whenever we set _prior """
         self._prior = dict_of_priors
         self.parameter_names = self._prior.keys()
         self.θ = self._sample_from_prior()
+        self = self.update_θ_summary_stats()
         self.n_free_parameters = len(self.θ.columns)
 
     def _sample_from_prior(self):
         """Generate initial θ particles, by sampling from the prior"""
-        particles_dict = {key: self.prior[key].rvs(size=self.n_particles)
-            for key in self.parameter_names}
+        particles_dict = {
+            key: self.prior[key].rvs(size=self.n_particles)
+            for key in self.parameter_names
+        }
         return pd.DataFrame.from_dict(particles_dict)
 
     @abstractmethod
     def predictive_y(self, θ, data):
-        '''
+        """
         Calculate the probability of chosing B. We need this to work in multiple
         contexts:
 
@@ -141,59 +145,74 @@ class Model():
         input: θ has N rows (eg N=500)
         input: data has N rows
         DESIRED output: p_chose_B is a N x 1 array
-        '''
+        """
         pass
 
     def simulate_y(self, design_df):
-        '''
+        """
         Get simulated response for a given set of true parameter.
         This functionality is only needed when we are simulating experiment.
         It is not needed when we just want to run experiments on real
         participants.
-        '''
+        """
         p_chose_B = self.predictive_y(self.θ_true, design_df)
         chose_B = random() < p_chose_B[0]
         return chose_B
 
     def export_posterior_histograms(self, filename):
-        '''Export pdf of marginal posteriors
+        """Export pdf of marginal posteriors
         filename: expecting this to be a string of filename and experiment date
         & time.
-        '''
+        """
         tri_plot(self.θ, filename, θ_true=self.θ_true, priors=self.prior)
 
-
     def get_θ_point_estimate(self):
-        '''return a point estimate (posterior median) for the model parameters'''
+        """return a point estimate (posterior median) for the model parameters"""
         median_series = self.θ.median(axis=0)
         return median_series.to_frame().T
 
-    def get_θ_summary_stats(self, param_name):
-        '''return summary stats for a given parameter'''
+    def update_θ_summary_stats(self):
+        """Calculate and store summary stats for all free parameters"""
+        summary_stats = {}
+        for param_name in list(self.parameter_names):
+            summary_stats[f"{param_name}_entropy"] = [self.get_θ_entropy(param_name)]
+            summary_stats[f"{param_name}_median"] = [self.θ[param_name].median()]
+            summary_stats[f"{param_name}_mean"] = [self.θ[param_name].mean()]
+            summary_stats[f"{param_name}_lower50"] = [self.θ[param_name].quantile(0.25)]
+            summary_stats[f"{param_name}_upper50"] = [self.θ[param_name].quantile(0.75)]
+            summary_stats[f"{param_name}_lower95"] = [
+                self.θ[param_name].quantile(0.025)
+            ]
+            summary_stats[f"{param_name}_upper95"] = [
+                self.θ[param_name].quantile(1 - 0.025)
+            ]
 
-        summary_stats = {'entropy': [self.get_θ_entropy(param_name)],
-                         'median': [self.θ[param_name].median()],
-                         'mean': [self.θ[param_name].mean()],
-                         'lower50': [self.θ[param_name].quantile(0.25)],
-                         'upper50': [self.θ[param_name].quantile(0.75)],
-                         'lower95': [self.θ[param_name].quantile(0.025)],
-                         'upper95': [self.θ[param_name].quantile(1-0.025)]}
-        summary_stats = pd.DataFrame.from_dict(summary_stats)
-        summary_stats = summary_stats.add_prefix(param_name + '_')
-        return summary_stats
+        df = pd.DataFrame.from_dict(summary_stats)
+
+        if self.summary_stats is None:
+            # if we have no summary stats yet then we store it as a dataframe
+            self.summary_stats = df
+        else:
+            self.summary_stats = self.summary_stats.append(
+                df, ignore_index=True, sort=False
+            )
+            # set trials column equal to index
+            self.summary_stats["trial"] = self.summary_stats.index
+
+        return self
 
     def get_θ_entropy(self, param_name):
-        '''Calculate the entropy of the distribution of samples for the
+        """Calculate the entropy of the distribution of samples for the
         requested parameter. Calculate this based upon the normal distribution.
-        '''
+        """
         samples = self.θ[param_name].values
-        distribution = norm # TODO: ASSSUMES A NORMAL DISTRIBUTION !!!!!!!!!!!!
+        distribution = norm  # TODO: ASSSUMES A NORMAL DISTRIBUTION !!!!!!!!!!!!
         return float(distribution.entropy(*distribution.fit(samples)))
 
     def generate_faux_true_params(self):
-        '''Generate some true parameters based on the model's priors. This
+        """Generate some true parameters based on the model's priors. This
         is used for doing testing parameter recovery where we need to generate
-        true parameters for any given concrete model class.'''
+        true parameters for any given concrete model class."""
 
         θ_dict = {}
         for key in self.parameter_names:
