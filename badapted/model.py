@@ -193,9 +193,14 @@ class Model:
             # if we have no summary stats yet then we store it as a dataframe
             self.summary_stats = df
         else:
-            self.summary_stats = self.summary_stats.append(
-                df, ignore_index=True, sort=False
-            )
+            # some old pandas doesn't have sort kwarg, so do a try/except
+            try:
+                self.summary_stats = self.summary_stats.append(
+                    df, ignore_index=True, sort=False
+                )
+            except:
+                self.summary_stats = self.summary_stats.append(df, ignore_index=True)
+
             # set trials column equal to index
             self.summary_stats["trial"] = self.summary_stats.index
 
