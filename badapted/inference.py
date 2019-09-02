@@ -8,8 +8,17 @@ import logging
 # NOTE: we are expecting particles to be an a pandas dataframe, with column names
 # rather than just a 2D numpy array.
 
-def update_beliefs(p_log_pdf, θstart, data=None, n_steps=5, step_type='normal',
-                   scale_walk_factor=None, ν=5, display=False):
+
+def update_beliefs(
+    p_log_pdf,
+    θstart,
+    data=None,
+    n_steps=50,
+    step_type="normal",
+    scale_walk_factor=None,
+    ν=5,
+    display=False,
+):
     """
     Automatically sets some of the required parameters for pmc using a random
     walk based proposal distribution.  The calls pmc() to return a new set of
@@ -50,12 +59,12 @@ def update_beliefs(p_log_pdf, θstart, data=None, n_steps=5, step_type='normal',
     if data is None:
         data = np.array([])
 
-    assert step_type is 'normal' or 'student_t', 'step_type must be normal or student_t'
+    assert step_type is "normal" or "student_t", "step_type must be normal or student_t"
 
     if scale_walk_factor is None:
-        if step_type is 'normal':
+        if step_type is "normal":
             scale_walk_factor = 2
-        elif step_type is 'student_t':
+        elif step_type is "student_t":
             scale_walk_factor = 2
 
     # scale walk should be a vector, length equal to number of parameter dimensions
@@ -66,25 +75,28 @@ def update_beliefs(p_log_pdf, θstart, data=None, n_steps=5, step_type='normal',
     else:
         scale_walk = scale_walk_factor * np.std(θstart, axis=0)
 
-    if step_type is 'normal':
+    if step_type is "normal":
+
         def q_log_pdf(θold, θ):
             # bit of a clusterfuck here about subtracting dataframes as the indicies are unordered
-            logpdf = norm.logpdf((θold.values-θ.values)/scale_walk, loc=0, scale=1)
+            logpdf = norm.logpdf((θold.values - θ.values) / scale_walk, loc=0, scale=1)
             return np.sum(logpdf, axis=1)
 
         def q_sample(θ):
-            return pd.DataFrame(norm.rvs(loc=θ, scale=scale_walk, size=θ.shape),
-                                         columns = θ.keys())
+            return pd.DataFrame(
+                norm.rvs(loc=θ, scale=scale_walk, size=θ.shape), columns=θ.keys()
+            )
 
-    elif step_type is 'student_t':
+    elif step_type is "student_t":
+
         def q_log_pdf(θold, θ):
-            logpdf = t.logpdf((θold-θ)/scale_walk, loc=0, scale=1, df=ν)
+            logpdf = t.logpdf((θold - θ) / scale_walk, loc=0, scale=1, df=ν)
             return np.sum(logpdf, axis=1, keepdims=True)
 
         def q_sample(θ):
-            return pd.DataFrame(t.rvs(df=ν, loc=θ, scale=scale_walk, size=θ.shape),
-                                         columns = θ.keys())
-
+            return pd.DataFrame(
+                t.rvs(df=ν, loc=θ, scale=scale_walk, size=θ.shape), columns=θ.keys()
+            )
 
     return pmc(data, p_log_pdf, q_log_pdf, q_sample, θstart, n_steps, display=display)
 
@@ -129,46 +141,59 @@ def pmc(data, p_log_pdf, q_log_pdf, q_sample, θstart, n_steps, display=False):
     Converted to Python by Benjamin Vincent May 2018
     """
 
+    n_samples, _ = θstart.shape
+
     θold = θstart
-    log_Z_steps = np.full(n_steps, np.nan)
 
     for n in range(n_steps):
-
         θ = q_sample(θold)
 
         log_p = p_log_pdf(θ, data)
-        assert not np.isnan(log_p).any(), 'Your p_log_pdf is generating NaNs!'
+        assert not np.isnan(log_p).any(), "Your p_log_pdf is generating NaNs!"
         # NOTE: You may be getting -inf values, for example if q_sample is generating
         # samples out of the domain of some of the parameters. But this is fine here,
         # and simply results in -inf log posterior prob
 
         log_q = q_log_pdf(θold, θ)
-        assert not np.isnan(log_q).any(), 'Your q_log_pdf is generating NaNs!'
+        assert not np.isnan(log_q).any(), "Your q_log_pdf is generating NaNs!"
 
-        w, sum_w, z_max = calculate_weights(log_p, log_q)
-        θ, _ = sample_rows(θ, θ.shape[0], replace=True, p=np.squeeze(w)) # TODO: do we need the squeeze?
+        log_w = log_p - log_q
+        log_w[(np.isinf(log_w)) | (np.isnan(log_w))] = -np.inf
+
+        if n is 0:
+            θ_store = θ
+            log_w_store = log_w
+        else:
+            θ_store = pd.concat([θ_store, θ])
+            log_w_store = np.concatenate([log_w_store, log_w])
+
+        θ, _, _ = resample_θ(θ, log_w, n_samples)
         θold = θ
 
-        log_Z_steps[n] = z_max + np.log(sum_w) - np.log(w.size)
+    θ, log_Z, ess = resample_θ(θ_store, log_w_store, n_samples)
 
-        # TODO: fix this logging/printing
-        # logging.info(f'mean {np.mean(θ)}, std_dev {np.std(θ)}')
-        # if display:
-        #     # TODO: I've not confirmed that this works
-        #     print(f'mean {np.mean(θ)}, std_dev {np.std(θ)}')
-
-    log_Z_steps_max = np.max(log_Z_steps)
-    Zs = np.exp(log_Z_steps - log_Z_steps_max)
-    log_Z = log_Z_steps_max + np.log(np.sum(Zs)) - np.log(log_Z_steps_max.size)
-
-    return (θ, log_Z)
+    return (θ, log_Z, ess)
 
 
-def calculate_weights(log_p, log_q):
-    log_w = log_p - log_q
-    log_w[(np.isinf(log_w)) | (np.isnan(log_w))] = -np.inf
+def resample_θ(θ, log_w, n_samples):
     z_max = np.max(log_w)
-    w = np.exp(log_w-z_max)
-    w, sum_w = normalise(w, return_sum=True)
-    assert not np.isnan(w).any(), 'At least one of weights is NaN'
-    return w, sum_w, z_max
+    w = np.exp(log_w - z_max)
+    sum_w = np.sum(w)
+    log_Z = z_max + np.log(sum_w) - np.log(len(w))
+    ess = (sum_w ** 2) / sum(w ** 2)
+    w = w / sum_w
+    assert not np.isnan(w).any(), "At least one of weights is NaN"
+
+    w_cum_sum = np.atleast_1d(np.cumsum(w))
+    w_cum_sum = np.insert(w_cum_sum, 0, np.array([0]), axis=0)
+    edges = np.minimum(w_cum_sum, 1)
+    edges[-1] = 1
+
+    # systematic resampling
+    r = np.random.random()
+    drawsForResample = r / n_samples + (np.arange(0, n_samples, 1) / n_samples)
+    i_resample = np.digitize(drawsForResample, edges, right=True) - 1
+    θ = θ.iloc[i_resample, :]
+
+    return θ, log_Z, ess
+

@@ -55,7 +55,7 @@ class Model:
     def update_beliefs(self, data):
         """simply call the low-level `update_beliefs` function"""
         start_time = time.time()
-        self.θ, _ = update_beliefs(self.p_log_pdf, self.θ, data, display=False)
+        self.θ, _, ess = update_beliefs(self.p_log_pdf, self.θ, data, display=False)
         logging.info(f"update_beliefs() took: {time.time()-start_time:1.3f} seconds")
 
         self = self.update_θ_summary_stats()
