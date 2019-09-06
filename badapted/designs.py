@@ -49,13 +49,21 @@ class DesignGeneratorABC(ABC):
         self.add_design_response_to_dataframe(design, response)
         self.trial += 1
 
-    @abstractmethod
     def add_design_response_to_dataframe(self, design, response):
         """
-        This method must take in `design` and `reward` from the current trial
-        and store this as a new row in self.data which is a pandas data frame.
+        Take in the current trial data (design + response), convert to dataframe,
+        and append to our dataframe of trial data from previous trials.
         """
-        pass
+
+        # build dataframe of data from current trial (design + response)
+        trial_data = pd.DataFrame(data=[design])
+        trial_data["R"] = int(response)
+
+        # append this trial's df with data from previous trials (self.data)
+        self.data = self.data.append(pd.DataFrame(trial_data))
+
+        self.data = self.data.reset_index(drop=True)
+        return
 
     def get_last_response_chose_B(self):
         """return True if the last response was for the option B"""
@@ -75,11 +83,6 @@ class DesignGeneratorABC(ABC):
         single row of pandas dataframe, and it must return the chosen design as a
         named tuple"""
         pass
-
-    # # TODO: remove this getter and just access the property directly
-    # def get_df(self):
-    #     '''return dataframe of data'''
-    #     return self.data
 
 
 class BayesianAdaptiveDesignGenerator(DesignGeneratorABC):
