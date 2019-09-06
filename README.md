@@ -31,9 +31,7 @@ def build_my_design_space(my_arguments):
 
 ### Step 2: define a custom design generator
 
-In order to generate your own design generator that uses Bayesian Adaptive Design (in your experimental domain) then you need to create a class which subclasses `badapted.BayesianAdaptiveDesignGenerator`. You will also need to implement some methods specific to your experimental domain, notably:
-- `add_design_response_to_dataframe`
-- `df_to_design_tuple`
+In order to generate your own design generator that uses Bayesian Adaptive Design (in your experimental domain) then you need to create a class which subclasses `badapted.BayesianAdaptiveDesignGenerator`. You will also need to implement `df_to_design_tuple`
 
 For the moment, we will just provide the example we use in the DARC Toolbox. Firstly, our concrete design generator class is defined as:
 
@@ -78,25 +76,6 @@ class DARCDesignGenerator(DesignGeneratorABC):
         data_columns = ['RA', 'DA', 'PA', 'RB', 'DB', 'PB', 'R']
         self.data = pd.DataFrame(columns=data_columns)
 
-    def add_design_response_to_dataframe(self, design, response):
-        '''
-        This method must take in `design` and `reward` from the current trial
-        and store this as a new row in self.data which is a pandas data frame.
-        '''
-
-        trial_data = {'RA': design.ProspectA.reward,
-                    'DA': design.ProspectA.delay,
-                    'PA': design.ProspectA.prob,
-                    'RB': design.ProspectB.reward,
-                    'DB': design.ProspectB.delay,
-                    'PB': design.ProspectB.prob,
-                    'R': [int(response)]}
-        self.data = self.data.append(pd.DataFrame(trial_data))
-        # a bit clumsy but...
-        self.data['R'] = self.data['R'].astype('int64')
-        self.data = self.data.reset_index(drop=True)
-        return
-
     @staticmethod
     def df_to_design_tuple(df):
         '''User must impliment this method. It takes in a design in the form of a
@@ -114,7 +93,7 @@ class DARCDesignGenerator(DesignGeneratorABC):
         return chosen_design
 ```
 
-We only did this multiple inheritance because we wanted other (non Bayesian Adaptive) design generators which worked in the DARC domain, but did not have any of the Bayesian Adaptive Design components. In most situations just focussing on Bayesian Adaptive Design, you could just define the `add_design_response_to_dataframe`, `df_to_design_tuple` classes in your one single concrete design generator class.
+We only did this multiple inheritance because we wanted other (non Bayesian Adaptive) design generators which worked in the DARC domain, but did not have any of the Bayesian Adaptive Design components. In most situations just focussing on Bayesian Adaptive Design, you could just define the  `df_to_design_tuple` classes in your one single concrete design generator class.
 
 
 ### Step 3: define a model
