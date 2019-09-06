@@ -77,12 +77,9 @@ class DesignGeneratorABC(ABC):
             return False
 
     @staticmethod
-    @abstractmethod
-    def df_to_design_tuple(chosen_design_df):
-        """User must impliment this method. It takes in a design in the form of a
-        single row of pandas dataframe, and it must return the chosen design as a
-        named tuple"""
-        pass
+    def df_to_design_tuple(df):
+        """Convert dataframe (should be single row) into named tuple"""
+        return [row for row in df.itertuples(name="Design", index=False)][0]
 
 
 class BayesianAdaptiveDesignGenerator(DesignGeneratorABC):
