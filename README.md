@@ -31,7 +31,7 @@ def build_my_design_space(my_arguments):
 
 ### Step 2: define a custom design generator
 
-In order to generate your own design generator that uses Bayesian Adaptive Design (in your experimental domain) then you need to create a class which subclasses `badapted.BayesianAdaptiveDesignGenerator`. You will also need to implement `df_to_design_tuple`
+In order to generate your own design generator that uses Bayesian Adaptive Design (in your experimental domain) then you need to create a class which subclasses `badapted.BayesianAdaptiveDesignGenerator`.
 
 For the moment, we will just provide the example we use in the DARC Toolbox. Firstly, our concrete design generator class is defined as:
 
@@ -58,7 +58,7 @@ class BayesianAdaptiveDesignGeneratorDARC(DARCDesignGenerator, BayesianAdaptiveD
         DARCDesignGenerator.__init__(self)
 ```
 
-Note that this has mulitple inheritance, so we also have a class `DARCDesignGenerator` which just includes DARC specific methods (`add_design_response_to_dataframe`, `df_to_design_tuple`). This is defined as:
+Note that this has mulitple inheritance, so we also have a class `DARCDesignGenerator`:
 
 ```python
 from badapted.designs import DesignGeneratorABC
@@ -75,25 +75,9 @@ class DARCDesignGenerator(DesignGeneratorABC):
         # generate empty dataframe
         data_columns = ['RA', 'DA', 'PA', 'RB', 'DB', 'PB', 'R']
         self.data = pd.DataFrame(columns=data_columns)
-
-    @staticmethod
-    def df_to_design_tuple(df):
-        '''User must impliment this method. It takes in a design in the form of a
-        single row of pandas dataframe, and it must return the chosen design as a
-        named tuple.
-        Convert 1-row pandas dataframe into named tuple'''
-        RA = df.RA.values[0]
-        DA = df.DA.values[0]
-        PA = df.PA.values[0]
-        RB = df.RB.values[0]
-        DB = df.DB.values[0]
-        PB = df.PB.values[0]
-        chosen_design = Design(ProspectA=Prospect(reward=RA, delay=DA, prob=PA),
-                            ProspectB=Prospect(reward=RB, delay=DB, prob=PB))
-        return chosen_design
 ```
 
-We only did this multiple inheritance because we wanted other (non Bayesian Adaptive) design generators which worked in the DARC domain, but did not have any of the Bayesian Adaptive Design components. In most situations just focussing on Bayesian Adaptive Design, you could just define the  `df_to_design_tuple` classes in your one single concrete design generator class.
+We only did this multiple inheritance because we wanted other (non Bayesian Adaptive) design generators which worked in the DARC domain, but did not have any of the Bayesian Adaptive Design components.
 
 
 ### Step 3: define a model
