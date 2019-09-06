@@ -109,7 +109,7 @@ class BayesianAdaptiveDesignGenerator(DesignGeneratorABC):
     def get_next_design(self, model):
 
         if self.trial > self.max_trials - 1:
-            return (None, None)
+            return None
         start_time = time.time()
         logging.info(f"Getting design for trial {self.trial}")
 
@@ -151,7 +151,7 @@ class BayesianAdaptiveDesignGenerator(DesignGeneratorABC):
 
         logging.debug(f"chosen design is: {chosen_design_named_tuple}")
         logging.info(f"get_next_design() took: {time.time()-start_time:1.3f} seconds")
-        return (chosen_design_named_tuple, chosen_design_df)
+        return chosen_design_named_tuple
 
     def _refine_design_space(self, model, allowable_designs):
         """A series of operations to refine down the space of designs which we
