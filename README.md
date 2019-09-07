@@ -2,7 +2,6 @@
 
 [![PyPI](https://img.shields.io/pypi/v/badapted.svg?color=green)](https://pypi.org/project/badapted/)
 
-**Status: Working code, but still under development 🔥**
 
 Run efficient Bayesian adaptive experiments.
 
@@ -84,34 +83,40 @@ class MyCustomModel(Model):
         return p_chose_B
 ```
 
-### Step 3: Put it all together
+### Step 3: You are done! Now use the code
+
+There are probably 2 main ways that someone might want to use the code:
+
+#### Using the code to run actual experiments
+
+The vast majority of people will want to use a custom experiment toolbox to run adpative experiments to collect data. We have currently focussed on using the adaptive methods in PsychoPy, but there is no real reason why it could not be used in any other Python-based experiment software.
+
+Probably the best way to get your adaptive experiment toolkit up and running is to look at example PsychoPy experiments. See the section below "Toolboxes using `badapted`" to go and find examples.
+
+#### Using the code to simulate adaptive experiments
+
+If you are a computational modeller or similar, then you might want to test how identifiable some model parameters are for a given design space, for example. If so, we provide some useful functions that we have used the development of this software.
+
+The code below shows an example of how to run a simulated experiment
 
 This is pretty straight-forward and there doesn't need to be any major customisation here.
 
 ```python
-def run_experiment(design_generator, model, max_trials):
-    '''Bare-bones experiment'''
+from badapted.parameter_recovery import simulated_experiment_trial_loop
 
-    for trial in range(max_trials):
-        design = design_generator.get_next_design(model)
-        if design is None:
-            break
-        response = get_response(design)
-        design_generator.enter_trial_design_and_response(design, response)
-        model.update_beliefs(design_generator.data)
 
-    return model
-
+# Build your design space
 designs = build_my_design_space(my_arguments)
+
+# Create a design generator using that design space
 design_generator = MyCustomDesignGenerator(designs, max_trials=max_trials)
+
+# Create a model object
 model = MyCustomModel()
-model = run_experiment(design_generator, model, max_trials)
+
+# Run a simulated experiment
+model, design_generator= simulated_experiment_trial_loop(design_generator, model, max_trials)
 ```
-
-Note that use of the `run_experiment` function is just a demonstration of the logic of how things fit together. As mentioned, please refer to PsychoPy example experiments in the [DARC Toolbox](https://github.com/drbenvincent/darc_toolbox) to see how this all comes together in a PsychoPy experiment.
-
-The `response = get_response(design)` part is up to you to impliment. What you do here depends on whether you are simulating responses or getting real responses from PsychoPy etc. The `run_experiment` function is just an example of how the various parts of the code work together. When running _actual_ experiments using PsychoPy, it is best to refer to the demo psychopy files we provide in the [DARC Toolbox](https://github.com/drbenvincent/darc_toolbox) as examples to see how this is done.
-
 
 ## Toolboxes using `badapted`
 - [DARC Toolbox](https://github.com/drbenvincent/darc_toolbox) for adpative Delayed and Risky Choice tasks.
