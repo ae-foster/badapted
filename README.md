@@ -162,8 +162,6 @@ def run_experiment(design_generator, model, max_trials):
 
 Note that the `response = get_response(design)` line is up to you to impliment. What you do here depends on whether you are simulating responses or getting real responses from PsychoPy etc. The `run_experiment` function is just an example of how the various parts of the code work together. When running _actual_ experiments using PsychoPy, it is best to refer to the demo psychopy files we provide in the [DARC Toolbox](https://github.com/drbenvincent/darc_toolbox) as examples to see how this is done.
 
-### Step 5: setup and run the experiment
-
 ```python
 designs = build_my_design_space(my_arguments)
 design_generator = MyCustomDesignGenerator(designs, max_trials=max_trials)
