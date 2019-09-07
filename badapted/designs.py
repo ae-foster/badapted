@@ -70,7 +70,7 @@ class DesignGeneratorABC(ABC):
 
     def get_last_response_chose_B(self):
         """return True if the last response was for the option B"""
-        if self.data.size == 0:
+        if (self.data is None) or (self.data.size == 0):
             # no previous responses
             return None
 
