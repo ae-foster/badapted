@@ -19,7 +19,7 @@ The best (first) example of this is our [DARC Toolbox](https://github.com/drbenv
 But below we outline how to go about creating a new 'toolbox' for your experimental domain of interest.
 
 
-### Step 1: define your design space
+### Step 1: Define your design space
 
 First we create a pandas dataframe called `designs` using a function we write to do this. Each column is a design variable. Each row is a particular design.
 
@@ -29,34 +29,16 @@ def build_my_design_space(my_arguments):
     return designs
 ```
 
-### Step 2: define a custom design generator
+### Step 2: Create a design generator
 
 In order to generate your own design generator that uses Bayesian Adaptive Design (in your experimental domain) then you need to create a class which subclasses `badapted.BayesianAdaptiveDesignGenerator`.
 
-For the moment, we will just provide the example we use in the DARC Toolbox. First we create a subclass which will add DARC specific information about the design space.
-
-```python
-from badapted.designs import DesignGeneratorABC
-from darc_toolbox import Prospect, Design
-
-
-class DARCDesignGenerator(DesignGeneratorABC):
-    '''This adds DARC specific functionality to the design generator'''
-
-    def __init__(self):
-        # super().__init__()
-        DesignGeneratorABC.__init__(self)
-
-        # generate empty dataframe
-        data_columns = ['RA', 'DA', 'PA', 'RB', 'DB', 'PB', 'R']
-        self.data = pd.DataFrame(columns=data_columns)
-```
-Then we create a concrete class which we will actually use as our design generator.
+An example would be:
 
 ```python
 from badapted.designs import BayesianAdaptiveDesignGenerator
 
-class BayesianAdaptiveDesignGeneratorDARC(DARCDesignGenerator, BayesianAdaptiveDesignGenerator):
+class BayesianAdaptiveDesignGeneratorDARC(BayesianAdaptiveDesignGenerator):
     '''This will be the concrete class for doing Bayesian adaptive design
     in the DARC experiment domain.'''
 
@@ -66,20 +48,21 @@ class BayesianAdaptiveDesignGeneratorDARC(DARCDesignGenerator, BayesianAdaptiveD
                  penalty_function_option='default',
                  λ=2):
 
-        # call superclass constructors - note that the order of calling these is important
         BayesianAdaptiveDesignGenerator.__init__(self, design_space,
                  max_trials=max_trials,
                  allow_repeats=allow_repeats,
                  penalty_function_option=penalty_function_option,
                  λ=λ)
 
-        DARCDesignGenerator.__init__(self)
+        # generate empty dataframe
+        data_columns = ['RA', 'DA', 'PA', 'RB', 'DB', 'PB', 'R']
+        self.data = pd.DataFrame(columns=data_columns)
 ```
 
-You could combine these classes into one. I did it this way just because it is useful to have DARC design space information which can then be used in other heuristic (non-Bayesian) design generators.
+This is relatively simple. We are just taking in some options and passing them to the `BayesianAdaptiveDesignGenerator`. The only other thing we do is to generate an empty table, `self.data` which will recieve our trial data of designs and responses.
 
 
-### Step 3: define a model
+### Step 3: Define a model
 
 You must provide a model class which inherits from `Model`. You must also provide the following methods:
 
@@ -90,7 +73,7 @@ Here is an example of a minimal implimentation of a user-defined model:
 
 ```python
 from badapted.model import Model
-from badapted.choice_functions import CumulativeNormalChoiceFunc, StandardCumulativeNormalChoiceFunc
+from badapted.choice_functions import CumulativeNormalChoiceFunc
 from scipy.stats import norm, halfnorm, uniform
 import numpy as np
 
@@ -107,10 +90,6 @@ class MyCustomModel(Model):
         - prior (dictionary). The keys provide the parameter name. The values
         must be scipy.stats objects which define the prior distribution for
         this parameter.
-
-        We provide choice functions in `badapted.choice_functions.py`. In this
-        example, we define it in the __init__ but it is not necessary to happen
-        here.
         '''
         self.n_particles = int(n_particles)
         self.prior = prior
@@ -120,8 +99,8 @@ class MyCustomModel(Model):
     def predictive_y(self, θ, data):
         '''
         INPUTS:
-        - θ = parameters
-        - data =
+        - θ = pandas dataframe of parameters
+        - data = pandas dataframe of designs
 
         OUTPUT:
         - p_chose_B (float) Must return a value between 0-1.
@@ -138,16 +117,13 @@ class MyCustomModel(Model):
         return p_chose_B
 ```
 
-### Step 4: build an experiment trial loop
+### Step 4: Put it all together
 
 This is pretty straight-forward and there doesn't need to be any major customisation here.
 
 ```python
 def run_experiment(design_generator, model, max_trials):
-    '''Run an adaptive experiment
-    INPUTS:
-    - design_generator: a class
-    '''
+    '''Bare-bones experiment'''
 
     for trial in range(max_trials):
         design = design_generator.get_next_design(model)
@@ -158,19 +134,16 @@ def run_experiment(design_generator, model, max_trials):
         model.update_beliefs(design_generator.data)
 
     return model
-```
 
-Note that the `response = get_response(design)` line is up to you to impliment. What you do here depends on whether you are simulating responses or getting real responses from PsychoPy etc. The `run_experiment` function is just an example of how the various parts of the code work together. When running _actual_ experiments using PsychoPy, it is best to refer to the demo psychopy files we provide in the [DARC Toolbox](https://github.com/drbenvincent/darc_toolbox) as examples to see how this is done.
-
-```python
 designs = build_my_design_space(my_arguments)
 design_generator = MyCustomDesignGenerator(designs, max_trials=max_trials)
 model = MyCustomModel()
-
 model = run_experiment(design_generator, model, max_trials)
 ```
 
 Note that use of the `run_experiment` function is just a demonstration of the logic of how things fit together. As mentioned, please refer to PsychoPy example experiments in the [DARC Toolbox](https://github.com/drbenvincent/darc_toolbox) to see how this all comes together in a PsychoPy experiment.
+
+The `response = get_response(design)` part is up to you to impliment. What you do here depends on whether you are simulating responses or getting real responses from PsychoPy etc. The `run_experiment` function is just an example of how the various parts of the code work together. When running _actual_ experiments using PsychoPy, it is best to refer to the demo psychopy files we provide in the [DARC Toolbox](https://github.com/drbenvincent/darc_toolbox) as examples to see how this is done.
 
 
 ## Toolboxes using `badapted`
