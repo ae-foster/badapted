@@ -33,7 +33,25 @@ def build_my_design_space(my_arguments):
 
 In order to generate your own design generator that uses Bayesian Adaptive Design (in your experimental domain) then you need to create a class which subclasses `badapted.BayesianAdaptiveDesignGenerator`.
 
-For the moment, we will just provide the example we use in the DARC Toolbox. Firstly, our concrete design generator class is defined as:
+For the moment, we will just provide the example we use in the DARC Toolbox. First we create a subclass which will add DARC specific information about the design space.
+
+```python
+from badapted.designs import DesignGeneratorABC
+from darc_toolbox import Prospect, Design
+
+
+class DARCDesignGenerator(DesignGeneratorABC):
+    '''This adds DARC specific functionality to the design generator'''
+
+    def __init__(self):
+        # super().__init__()
+        DesignGeneratorABC.__init__(self)
+
+        # generate empty dataframe
+        data_columns = ['RA', 'DA', 'PA', 'RB', 'DB', 'PB', 'R']
+        self.data = pd.DataFrame(columns=data_columns)
+```
+Then we create a concrete class which we will actually use as our design generator.
 
 ```python
 from badapted.designs import BayesianAdaptiveDesignGenerator
@@ -58,26 +76,7 @@ class BayesianAdaptiveDesignGeneratorDARC(DARCDesignGenerator, BayesianAdaptiveD
         DARCDesignGenerator.__init__(self)
 ```
 
-Note that this has mulitple inheritance, so we also have a class `DARCDesignGenerator`:
-
-```python
-from badapted.designs import DesignGeneratorABC
-from darc_toolbox import Prospect, Design
-
-
-class DARCDesignGenerator(DesignGeneratorABC):
-    '''This adds DARC specific functionality to the design generator'''
-
-    def __init__(self):
-        # super().__init__()
-        DesignGeneratorABC.__init__(self)
-
-        # generate empty dataframe
-        data_columns = ['RA', 'DA', 'PA', 'RB', 'DB', 'PB', 'R']
-        self.data = pd.DataFrame(columns=data_columns)
-```
-
-We only did this multiple inheritance because we wanted other (non Bayesian Adaptive) design generators which worked in the DARC domain, but did not have any of the Bayesian Adaptive Design components.
+You could combine these classes into one. I did it this way just because it is useful to have DARC design space information which can then be used in other heuristic (non-Bayesian) design generators.
 
 
 ### Step 3: define a model
