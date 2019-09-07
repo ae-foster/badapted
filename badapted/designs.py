@@ -60,7 +60,10 @@ class DesignGeneratorABC(ABC):
         trial_data["R"] = int(response)
 
         # append this trial's df with data from previous trials (self.data)
-        self.data = self.data.append(pd.DataFrame(trial_data))
+        if self.data is None:
+            self.data = trial_data
+        else:
+            self.data = self.data.append(pd.DataFrame(trial_data))
 
         self.data = self.data.reset_index(drop=True)
         return
@@ -226,19 +229,14 @@ class BayesianAdaptiveDesignGenerator(DesignGeneratorABC):
         return design_ranks
 
     def _default_penalty_func(self, candidate_designs, base_sigma=1, λ=2):
-        # get previous designs -----------------------------------
-        # TODO: refactor so there is a simple getter for just the designs,
-        # not the responses
-        # This will get previous designs AND responses, then just get design
-        # variables
-        previous_designs = self.data[self.design_variables]
-        # --------------------------------------------------------
 
-        n_previous_designs = previous_designs.shape[0]
-        if n_previous_designs is 0:
+        if self.data is None:
             # If there are no previous designs, we shouldn't apply any factors
             penalty_factors = np.ones(candidate_designs.shape[0])
             return penalty_factors
+        else:
+            previous_designs = self.data[self.design_variables]
+            n_previous_designs = previous_designs.shape[0]
 
         # To keep problem self similarity, we apply the kernel in the space of
         # ranks.
