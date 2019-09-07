@@ -29,40 +29,7 @@ def build_my_design_space(my_arguments):
     return designs
 ```
 
-### Step 2: Create a design generator
-
-In order to generate your own design generator that uses Bayesian Adaptive Design (in your experimental domain) then you need to create a class which subclasses `badapted.BayesianAdaptiveDesignGenerator`.
-
-An example would be:
-
-```python
-from badapted.designs import BayesianAdaptiveDesignGenerator
-
-class BayesianAdaptiveDesignGeneratorDARC(BayesianAdaptiveDesignGenerator):
-    '''This will be the concrete class for doing Bayesian adaptive design
-    in the DARC experiment domain.'''
-
-    def __init__(self, design_space,
-                 max_trials=20,
-                 allow_repeats=True,
-                 penalty_function_option='default',
-                 λ=2):
-
-        BayesianAdaptiveDesignGenerator.__init__(self, design_space,
-                 max_trials=max_trials,
-                 allow_repeats=allow_repeats,
-                 penalty_function_option=penalty_function_option,
-                 λ=λ)
-
-        # generate empty dataframe
-        data_columns = ['RA', 'DA', 'PA', 'RB', 'DB', 'PB', 'R']
-        self.data = pd.DataFrame(columns=data_columns)
-```
-
-This is relatively simple. We are just taking in some options and passing them to the `BayesianAdaptiveDesignGenerator`. The only other thing we do is to generate an empty table, `self.data` which will recieve our trial data of designs and responses.
-
-
-### Step 3: Define a model
+### Step 2: Define a model
 
 You must provide a model class which inherits from `Model`. You must also provide the following methods:
 
@@ -117,7 +84,7 @@ class MyCustomModel(Model):
         return p_chose_B
 ```
 
-### Step 4: Put it all together
+### Step 3: Put it all together
 
 This is pretty straight-forward and there doesn't need to be any major customisation here.
 
