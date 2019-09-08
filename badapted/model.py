@@ -162,12 +162,12 @@ class Model:
         chose_B = random() < p_chose_B[0]
         return chose_B
 
-    def export_posterior_histograms(self, filename):
+    def posterior_triplot(self, filename=None):
         """Export pdf of marginal posteriors
         filename: expecting this to be a string of filename and experiment date
         & time.
         """
-        tri_plot(self.θ, filename, θ_true=self.θ_true, priors=self.prior)
+        tri_plot(self.θ, filename=None, θ_true=self.θ_true, priors=self.prior)
 
     def get_θ_point_estimate(self):
         """return a point estimate (posterior median) for the model parameters"""
