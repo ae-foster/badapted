@@ -174,7 +174,6 @@ class BayesianAdaptiveDesignGenerator(DesignGeneratorABC):
                 :,
             ]
 
-        # Remove highly preductable designs
         allowable_designs = _remove_highly_predictable_designs(allowable_designs, model)
 
         return allowable_designs
@@ -285,23 +284,6 @@ class BayesianAdaptiveDesignGenerator(DesignGeneratorABC):
         # penalty_factors should be a 1D vector
         penalty_factors = np.squeeze(penalty_factors)
         return penalty_factors
-
-
-def _choose_one_along_design_dimension(allowable_designs, design_dim_name):
-    """We are going to take one design dimension given by `design_dim_name` and randomly
-    pick one of it's values and hold it constant by removing all others from the list of
-    allowable_designs.
-    The purpose of this is to promote variation along the chosen design dimension.
-    Cutting down the set of allowable_designs which we do design optimisation on is a
-    nice side-effect rather than a direct goal.
-    """
-    unique_values = allowable_designs[design_dim_name].unique()
-    chosen_value = random.choice(unique_values)
-    # filter by chosen value of this dimension
-    allowable_designs = allowable_designs.loc[
-        allowable_designs[design_dim_name] == chosen_value
-    ]
-    return allowable_designs
 
 
 def _remove_highly_predictable_designs(allowable_designs, model):
