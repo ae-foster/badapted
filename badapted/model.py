@@ -222,6 +222,6 @@ class Model:
         is used for doing testing parameter recovery where we need to generate
         true parameters for any given concrete model class."""
 
-        θ_dict = {key: self.prior[key].mean() for key in self.parameter_names}
+        θ_dict = {key: [self.prior[key].mean()] for key in self.parameter_names}
         self.θ_true = pd.DataFrame.from_dict(θ_dict)
         return self
