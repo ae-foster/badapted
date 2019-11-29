@@ -181,6 +181,7 @@ class Model:
             summary_stats[f"{param_name}_entropy"] = [self.get_θ_entropy(param_name)]
             summary_stats[f"{param_name}_median"] = [self.θ[param_name].median()]
             summary_stats[f"{param_name}_mean"] = [self.θ[param_name].mean()]
+            summary_stats[f"{param_name}_std"] = [self.θ[param_name].std()]
             summary_stats[f"{param_name}_lower50"] = [self.θ[param_name].quantile(0.25)]
             summary_stats[f"{param_name}_upper50"] = [self.θ[param_name].quantile(0.75)]
             summary_stats[f"{param_name}_lower95"] = [
