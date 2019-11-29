@@ -212,11 +212,11 @@ class Model:
 
     def get_θ_entropy(self, param_name):
         """Calculate the entropy of the distribution of samples for the
-        requested parameter. Calculate this based upon the normal distribution.
-        """
+        requested parameter."""
         samples = self.θ[param_name].values
-        distribution = norm  # TODO: ASSSUMES A NORMAL DISTRIBUTION !!!!!!!!!!!!
-        return float(distribution.entropy(*distribution.fit(samples)))
+        dist = self.prior[param_name].dist
+        fit = dist.fit(samples)
+        return float(dist.entropy(*fit))
 
     def generate_faux_true_params(self):
         """Generate some true parameters based on the model's priors. This
