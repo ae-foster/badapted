@@ -2,13 +2,21 @@ from badapted.model import Model
 from badapted.choice_functions import CumulativeNormalChoiceFunc
 from badapted.designs import BayesianAdaptiveDesignGenerator
 from badapted.parameter_recovery import simulated_experiment_trial_loop
+
 from scipy.stats import norm, halfnorm, uniform
 import numpy as np
 import pandas as pd
 
+import multiprocessing
+from joblib import Parallel, delayed
+
 
 def build_my_design_space():
-    delays = [1, 2, 3, 4,5, 6, 7, 8, 9, 12, 1 * 24, 2 * 24, 3 * 24, 4 * 24, 5 * 24, 6 * 24, 7 *24, 2 * 24 * 7 , 3 * 24 * 7, 4 *24 * 7, 3 * 24 * 30, 4 * 24 * 30, 5 * 24 * 30, 6 * 24 * 30, 8 * 24 * 30, 9 *24*30, 1 * 24 * 365, 2 * 24 * 365,3 * 24 * 365, 4 * 24 * 365, 5 * 24 * 365, 6 * 24 * 365, 7 * 24 * 365, 8*24*365, 10*24*365, 15*24*365, 20*24*365, 25 *24*365]
+    delays = [1, 2, 3, 4,5, 6, 7, 8, 9, 12,
+              1 * 24, 2 * 24, 3 * 24, 4 * 24, 5 * 24, 6 * 24, 7 *24, 2 * 24 * 7 , 3 * 24 * 7, 4 *24 * 7,
+              3 * 24 * 30, 4 * 24 * 30, 5 * 24 * 30, 6 * 24 * 30, 8 * 24 * 30, 9 *24*30,
+              1 * 24 * 365, 2 * 24 * 365,3 * 24 * 365, 4 * 24 * 365, 5 * 24 * 365, 6 * 24 * 365, 7 * 24 * 365,
+              8*24*365, 10*24*365, 15*24*365, 20*24*365, 25 *24*365]
     rewards = list(range(1,100))
     data = []
     for i in range(len(delays)):
@@ -17,6 +25,7 @@ def build_my_design_space():
             data.append(optns)
     designs = pd.DataFrame(data)
     return designs
+
 
 class MyCustomModel(Model):
 
@@ -45,11 +54,7 @@ class MyCustomModel(Model):
         return p_chose_B
 
 
-if __name__ == '__main__':
-
-    # Build your design space
-    designs = build_my_design_space()
-
+def run_exp(designs):
     # Create a design generator using that design space
     design_generator = BayesianAdaptiveDesignGenerator(designs, max_trials=15)
 
@@ -63,3 +68,12 @@ if __name__ == '__main__':
     print(design_generator.data)
     print(time.time() - t)
 
+
+if __name__ == '__main__':
+
+    # Build your design space
+    designs = build_my_design_space()
+
+    t = time.time()
+    processed_list = Parallel(n_jobs=40)(delayed(run_exp) for i in range(200))
+    print("Time", time.time() - t)
