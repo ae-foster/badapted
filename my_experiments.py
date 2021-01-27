@@ -3,9 +3,13 @@ from badapted.choice_functions import CumulativeNormalChoiceFunc
 from badapted.designs import BayesianAdaptiveDesignGenerator
 from badapted.parameter_recovery import simulated_experiment_trial_loop
 
+import scipy
 from scipy.stats import norm, halfnorm, uniform
 import numpy as np
 import pandas as pd
+import time
+import pickle
+from tqdm import trange
 
 import multiprocessing
 from joblib import Parallel, delayed
@@ -36,7 +40,10 @@ class MyCustomModel(Model):
         self.n_particles = n_particles
         self.prior = prior
         self.θ_fixed = {'ϵ': 0.01}
-        self.θ_true = pd.DataFrame([{'α': 1., 'logk': -5.}])
+        # Annoying, this is why they invented probabilistic programming
+        true_alpha = np.abs(scipy.random.normal(loc=0., scale=2.))
+        true_logk = scipy.random.normal(loc=-4.25, scale=1.5)
+        self.θ_true = pd.DataFrame([{'α': true_alpha, 'logk': true_logk}])
 
         self.choiceFunction = CumulativeNormalChoiceFunc
 
@@ -46,7 +53,8 @@ class MyCustomModel(Model):
         VA = data['RA'].values * 1 / (1 + k * data['DA'].values)
         VB = data['RB'].values * 1 / (1 + k * data['DB'].values)
         if display:
-            print('VA', VA, 'VB', VB)
+            # print('VA', VA, 'VB', VB)
+            pass
         decision_variable = VB - VA
 
         # Step 2 - apply choice function
@@ -62,11 +70,9 @@ def run_exp(designs):
     model = MyCustomModel()
 
     # Run a simulated experiment
-    import time
-    t = time.time()
     model, design_generator= simulated_experiment_trial_loop(design_generator, model)
-    print(design_generator.data)
-    print(time.time() - t)
+
+    return design_generator.data, model.θ_true
 
 
 if __name__ == '__main__':
@@ -75,5 +81,10 @@ if __name__ == '__main__':
     designs = build_my_design_space()
 
     t = time.time()
-    processed_list = Parallel(n_jobs=40)(delayed(run_exp) for i in range(200))
+    processed_list = Parallel(n_jobs=40)(delayed(run_exp)(designs) for i in trange(5000))
     print("Time", time.time() - t)
+
+    with open('badapted_results.pickle', 'wb') as f:
+        pickle.dump(processed_list, f)
+
+    
