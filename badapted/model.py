@@ -148,7 +148,7 @@ class Model:
         """
         pass
 
-    def simulate_y(self, design_named_tuple):
+    def simulate_y(self, design_named_tuple, **kwargs):
         """
         Get simulated response for a given set of true parameter.
         This functionality is only needed when we are simulating experiment.
@@ -158,7 +158,7 @@ class Model:
         # convert design as named tuple into dataframe
         design_df = pd.DataFrame(data=[design_named_tuple])
 
-        p_chose_B = self.predictive_y(self.θ_true, design_df)
+        p_chose_B = self.predictive_y(self.θ_true, design_df, **kwargs)
         chose_B = random() < p_chose_B[0]
         return chose_B
 

@@ -18,7 +18,7 @@ def StandardCumulativeNormalChoiceFunc(decision_variable, θ, θ_fixed):
 
 def CumulativeNormalChoiceFunc(decision_variable, θ, θ_fixed):
     """Our default choice function"""
-    α = θ["α"].values
+    α = 1e-3 + θ["α"].values
     p_chose_B = θ_fixed["ϵ"] + (1 - 2 * θ_fixed["ϵ"]) * _Phi(
         np.divide(decision_variable, α)
     )

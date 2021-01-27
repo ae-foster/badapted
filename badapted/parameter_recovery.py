@@ -53,7 +53,7 @@ def simulated_experiment_trial_loop(design_thing, fitted_model, response_model=N
         if design is None:
             break
 
-        response = response_model.simulate_y(design)
+        response = response_model.simulate_y(design, display=True)
 
         design_thing.enter_trial_design_and_response(design, response)
 
