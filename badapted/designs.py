@@ -12,6 +12,7 @@ import time
 import copy
 import random
 from scipy.stats import multivariate_normal
+from collections import namedtuple
 from badapted.optimisation import design_optimisation
 
 
@@ -132,7 +133,7 @@ class BayesianAdaptiveDesignGenerator(DesignGeneratorABC):
 
         # process penalty_function_option provided by user upon object
         # construction
-        if self.penalty_function_option is "default":
+        if self.penalty_function_option == "default":
             # penalty_func = lambda d: self._default_penalty_func(d, λ=self.λ)
             def penalty_func(d):
                 return self._default_penalty_func(d, λ=self.λ)
@@ -212,7 +213,7 @@ class BayesianAdaptiveDesignGenerator(DesignGeneratorABC):
             )
             N_this = len(all_designs_this_variable)
 
-            if N_this is 1:
+            if N_this == 1:
                 design_ranks[:, n] = 0.5
             else:
                 # Interpolate input_designs so they are a value between 0 and 1
@@ -380,7 +381,7 @@ class FryeEtAlGenerator(DesignGeneratorABC):
         if self.trial > self.max_trials - 1:
             return None
 
-        if self.trial == 1:
+        if self.trial == 0:
             # Set-up is correct from __init__
             pass
         else:
@@ -392,7 +393,8 @@ class FryeEtAlGenerator(DesignGeneratorABC):
             self.post_choice_adjustment /= 2
 
         d_b = self.d_b_space[self.delay_counter]
-        design = pd.DataFrame([{'RA': self.r_a, 'RB': self.r_b, 'DA': self.da, 'DB': d_b}])
+        design_tuple_type = namedtuple("Design", ['RA', 'RB', 'DA', 'DB'])
+        design = design_tuple_type(self.r_a, self.r_b, self.d_a, d_b)
 
         self.trial_inner_counter += 1
         if self.trial_inner_counter > self.trials_per_delay:
@@ -402,4 +404,4 @@ class FryeEtAlGenerator(DesignGeneratorABC):
         return design
 
     def previously_chose_delayed(self):
-        return bool(self.data[-1]["R"])
+        return bool(self.data.iloc[-1]["R"])
