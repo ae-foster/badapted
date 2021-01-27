@@ -361,11 +361,12 @@ def _calc_predictability(allowable_designs, threshold):
     return (highly_predictable, n_predictable, n_not_predictable)
 
 
-class FryEtAlGenerator(DesignGeneratorABC):
+class FryeEtAlGenerator(DesignGeneratorABC):
 
-    def __init__(self, d_a, d_b_space, r_b, num_trials):
+    def __init__(self, d_a, d_b_space, r_b, max_trials, trials_per_delay):
         super().__init__()
-        self.num_trials = num_trials
+        self.max_trials = max_trials
+        self.trials_per_delay = trials_per_delay
         self.d_a = d_a
         self.d_b_space = d_b_space
         self.r_b = r_b
