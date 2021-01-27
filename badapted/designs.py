@@ -359,3 +359,46 @@ def _calc_predictability(allowable_designs, threshold):
     n_predictable = sum(highly_predictable)
     n_not_predictable = allowable_designs.shape[0] - n_predictable
     return (highly_predictable, n_predictable, n_not_predictable)
+
+
+class FryEtAlGenerator(DesignGeneratorABC):
+
+    def __init__(self, d_a, d_b_space, r_b, num_trials):
+        super().__init__()
+        self.num_trials = num_trials
+        self.d_a = d_a
+        self.d_b_space = d_b_space
+        self.r_b = r_b
+        self.r_a = self.r_b / 2
+        self.delay_counter = 0
+        self.post_choice_adjustment = 0.25
+        self.trial_inner_counter = 1
+
+    def get_next_design(self, model):
+
+        if self.trial > self.max_trials - 1:
+            return None
+
+        if self.trial == 1:
+            # Set-up is correct from __init__
+            pass
+        else:
+            if self.previously_chose_delayed():
+                self.r_a = self.r_a + self.r_b * self.post_choice_adjustment
+            else:
+                self.r_a = self.r_a - self.r_b * self.post_choice_adjustment
+
+            self.post_choice_adjustment /= 2
+
+        d_b = self.d_b_space[self.delay_counter]
+        design = pd.DataFrame([{'RA': self.r_a, 'RB': self.r_b, 'DA': self.da, 'DB': d_b}])
+
+        self.trial_inner_counter += 1
+        if self.trial_inner_counter > self.trials_per_delay:
+            self.delay_counter += 1
+            self.trial_inner_counter = 1
+
+        return design
+
+    def previously_chose_delayed(self):
+        return bool(self.data[-1]["R"])
