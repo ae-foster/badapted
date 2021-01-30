@@ -83,7 +83,7 @@ if __name__ == '__main__':
     processed_list = Parallel(n_jobs=40)(delayed(run_exp)(designs) for i in trange(10000))
     print("Time", time.time() - t)
 
-    with open('badapted_70_T25_results.pickle', 'wb') as f:
+    with open('badapted_70_T20_results.pickle', 'wb') as f:
         pickle.dump(processed_list, f)
 
 
