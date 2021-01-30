@@ -91,7 +91,7 @@ def design_optimisation(designs, predictive_y, θ,
     else:
         penalty_factors = penalty_func(designs)
 
-    assert penalty_factors.ndim is 1, "penalty_factors should be 1 dimensional"
+    assert penalty_factors.ndim == 1, "penalty_factors should be 1 dimensional"
 
     assert nD > 0, "No designs provided!"
 
@@ -126,7 +126,7 @@ def design_optimisation(designs, predictive_y, θ,
 
         if sum(U) == 0.0:
             logging.warning('No design helpful, off the edge of the design space!')
-            chosen_design = designs[np.random.randint(0, nD), :]
+            chosen_design = designs.take([np.random.randint(0, nD)])
             estimated_utilities = U
             return (chosen_design, estimated_utilities)
 

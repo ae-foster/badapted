@@ -61,7 +61,7 @@ def run_exp():
 if __name__ == '__main__':
 
     t = time.time()
-    processed_list = Parallel(n_jobs=40)(delayed(run_exp)() for i in trange(5000))
+    processed_list = Parallel(n_jobs=40)(delayed(run_exp)() for i in trange(10000))
     print("Time", time.time() - t)
 
     with open('frye_results.pickle', 'wb') as f:

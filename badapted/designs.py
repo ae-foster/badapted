@@ -400,6 +400,8 @@ class FryeEtAlGenerator(DesignGeneratorABC):
         if self.trial_inner_counter > self.trials_per_delay:
             self.delay_counter += 1
             self.trial_inner_counter = 1
+            self.post_choice_adjustment = .25
+            self.r_a = self.r_b / 2
 
         return design
 
