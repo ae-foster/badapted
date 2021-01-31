@@ -32,7 +32,7 @@ def build_my_design_space():
 
 class MyCustomModel(Model):
 
-    def __init__(self, n_particles=10,
+    def __init__(self, n_particles=20,
                  prior={'logk': norm(loc=-4.25, scale=1.5),
                         'α': halfnorm(loc=0, scale=2)}):
 
@@ -80,10 +80,10 @@ if __name__ == '__main__':
     designs = build_my_design_space()
 
     t = time.time()
-    processed_list = Parallel(n_jobs=40)(delayed(run_exp)(designs) for i in trange(10000))
+    processed_list = Parallel(n_jobs=1)(delayed(run_exp)(designs) for i in trange(1))
     print("Time", time.time() - t)
 
-    with open('badapted_T20.pickle', 'wb') as f:
-        pickle.dump(processed_list, f)
+#    with open('badapted_T20.pickle', 'wb') as f:
+#        pickle.dump(processed_list, f)
 
 
