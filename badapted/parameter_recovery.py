@@ -49,22 +49,22 @@ def simulated_experiment_trial_loop(design_thing, fitted_model, response_model=N
 
     while True:
         
-        t = time.time()
+        #t = time.time()
         design = design_thing.get_next_design(fitted_model)
-        print("Time to design compute", time.time()-t)
+        #print("Time to design compute", time.time()-t)
 
         if design is None:
             break
 
         response = response_model.simulate_y(design, display=True)
 
-        t = time.time()
+        #t = time.time()
         design_thing.enter_trial_design_and_response(design, response)
-        print('Time to enter response data', time.time() -t)
+        #print('Time to enter response data', time.time() -t)
 
-        t=time.time()
+        #t=time.time()
         fitted_model.update_beliefs(design_thing.data)
-        print("Time to update beliefs", time.time() - t)
+        #print("Time to update beliefs", time.time() - t)
 
     return (fitted_model, design_thing)
 

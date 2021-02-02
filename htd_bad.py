@@ -80,10 +80,10 @@ if __name__ == '__main__':
     designs = build_my_design_space()
 
     t = time.time()
-    processed_list = Parallel(n_jobs=1)(delayed(run_exp)(designs) for i in trange(1))
+    processed_list = Parallel(n_jobs=40)(delayed(run_exp)(designs) for i in trange(10000))
     print("Time", time.time() - t)
 
-#    with open('badapted_T20.pickle', 'wb') as f:
-#        pickle.dump(processed_list, f)
+    with open('badapted_T20_run2.pickle', 'wb') as f:
+        pickle.dump(processed_list, f)
 
 
