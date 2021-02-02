@@ -46,7 +46,7 @@ class MyCustomModel(Model):
 def run_exp():
     # Create a design generator using that design space
     design_generator = FryeEtAlGenerator(
-        d_a=0., d_b_space=[7, 30, 365], r_b=100., max_trials=15, trials_per_delay=5
+        d_a=0., d_b_space=[7, 30, 90, 365], r_b=100., max_trials=20, trials_per_delay=5
     )
 
     # Create a model object
@@ -64,5 +64,5 @@ if __name__ == '__main__':
     processed_list = Parallel(n_jobs=40)(delayed(run_exp)() for i in trange(10000))
     print("Time", time.time() - t)
 
-    with open('frye_results.pickle', 'wb') as f:
+    with open('frye_results_T20.pickle', 'wb') as f:
         pickle.dump(processed_list, f)
