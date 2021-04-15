@@ -381,7 +381,7 @@ class FryeEtAlGenerator(DesignGeneratorABC):
         if self.trial > self.max_trials - 1:
             return None
 
-        if self.trial == 0:
+        if self.trial_inner_counter == 1:
             # Set-up is correct from __init__
             pass
         else:
