@@ -1,6 +1,6 @@
 from badapted.model import Model
 from badapted.choice_functions import CumulativeNormalChoiceFunc
-from badapted.designs import FryeEtAlGenerator
+from badapted.designs import BayesianAdaptiveDesignGenerator
 from badapted.parameter_recovery import simulated_experiment_trial_loop
 
 import scipy
@@ -15,9 +15,24 @@ import multiprocessing
 from joblib import Parallel, delayed
 
 
+def build_my_design_space():
+    delays = [1, 2, 3, 4, 5, 6, 7, 2 * 7, 3 * 7, 4 * 7,
+              3 * 30, 4 * 30, 5 * 30, 6 * 30, 8 * 30, 9 * 30,
+              1 * 365, 2 * 365, 3 * 365, 4 * 365, 5 * 365, 6 * 365, 7 * 365,
+              8 * 365, 10 * 365, 15 * 365, 20 * 365, 25 * 365]
+    rewards = list(range(1,100))
+    data = []
+    for i in range(len(delays)):
+        for j in range(len(rewards)):
+            optns = {'DA': 0, 'RB': 100, 'DB': delays[i], 'RA': rewards[j]}
+            data.append(optns)
+    designs = pd.DataFrame(data)
+    return designs
+
+
 class MyCustomModel(Model):
 
-    def __init__(self, n_particles=1000,
+    def __init__(self, n_particles=20,
                  prior={'logk': norm(loc=-4.25, scale=1.5),
                         'α': halfnorm(loc=0, scale=2)}):
 
@@ -36,6 +51,9 @@ class MyCustomModel(Model):
         k = np.exp(θ['logk'].values)
         VA = data['RA'].values * 1 / (1 + k * data['DA'].values)
         VB = data['RB'].values * 1 / (1 + k * data['DB'].values)
+        if display:
+            # print('VA', VA, 'VB', VB)
+            pass
         decision_variable = VB - VA
 
         # Step 2 - apply choice function
@@ -43,11 +61,9 @@ class MyCustomModel(Model):
         return p_chose_B
 
 
-def run_exp():
+def run_exp(designs):
     # Create a design generator using that design space
-    design_generator = FryeEtAlGenerator(
-        d_a=0., d_b_space=[7, 30, 90, 365], r_b=100., max_trials=20, trials_per_delay=5
-    )
+    design_generator = BayesianAdaptiveDesignGenerator(designs, max_trials=20)
 
     # Create a model object
     model = MyCustomModel()
@@ -60,9 +76,12 @@ def run_exp():
 
 if __name__ == '__main__':
 
-    t = time.time()
-    processed_list = Parallel(n_jobs=40)(delayed(run_exp)() for i in trange(10000))
-    print("Time", time.time() - t)
+    # Build your design space
+    designs = build_my_design_space()
 
-    with open('frye_results_T20.pickle', 'wb') as f:
+    processed_list = Parallel(n_jobs=40)(delayed(run_exp)(designs) for i in trange(10000))
+
+    with open('badapted_T20.pickle', 'wb') as f:
         pickle.dump(processed_list, f)
+
+
